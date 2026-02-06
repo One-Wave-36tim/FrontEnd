@@ -575,7 +575,16 @@ class ResumeWritingPage extends StatefulWidget {
 
 class _ResumeWritingPageState extends State<ResumeWritingPage> {
   bool isAnalysisExpanded = true;
-  final TextEditingController _resumeController = TextEditingController();
+  late TextEditingController _resumeController;
+
+  @override
+  void initState() {
+    super.initState();
+    final controller = Get.find<HomeController>();
+    final project = controller.projects[widget.projectIndex];
+    final existingContent = project['resume']?['content'] ?? "";
+    _resumeController = TextEditingController(text: existingContent);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1010,6 +1019,613 @@ class _ChatBotSheetState extends State<_ChatBotSheet> {
           ),
         ),
       ),
+    );
+  }
+}
+
+// --- 4. 모의면접 입문 화면 ---
+class InterviewIntroPage extends StatefulWidget {
+  final int projectIndex;
+  const InterviewIntroPage({super.key, required this.projectIndex});
+
+  @override
+  State<InterviewIntroPage> createState() => _InterviewIntroPageState();
+}
+
+class _InterviewIntroPageState extends State<InterviewIntroPage> {
+  final TextEditingController _jobPostController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new,
+              size: 20, color: Colors.black),
+          onPressed: () => context.pop(),
+        ),
+        title: Text('모의면접 시작',
+            style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: Colors.black)),
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 기업 공고 텍스트 박스
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.grey.shade100),
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.02),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10)),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text("기업 공고 텍스트 확인",
+                          style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text("붙여넣기 완료",
+                          style: GoogleFonts.outfit(
+                              color: Colors.grey, fontSize: 12)),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8F9FA),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Stack(
+                      children: [
+                        TextField(
+                          controller: _jobPostController,
+                          maxLines: 6,
+                          style: GoogleFonts.outfit(fontSize: 13, height: 1.6),
+                          decoration:
+                              const InputDecoration(border: InputBorder.none),
+                        ),
+                        const Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: Icon(Icons.edit_outlined,
+                              size: 20, color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const Icon(Icons.check_circle,
+                          size: 16, color: Colors.green),
+                      const SizedBox(width: 8),
+                      Text("AI가 5개 핵심 역량 키워드를 추출했습니다",
+                          style: GoogleFonts.outfit(
+                              color: Colors.black54, fontSize: 13)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // 면접 설명
+            Text("면접 설명",
+                style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 16),
+            _buildDescriptionItem(
+                Icons.list_alt, "총 10문제", "직무 핵심 역량 기반 AI 생성 질문"),
+            _buildDescriptionItem(Icons.play_circle_outline, "진행 방식",
+                "질문 제시 → 답변 준비(30초) → 답변 녹음/녹화(2분) → 다음 문제"),
+            _buildDescriptionItem(Icons.videocam_outlined, "녹음 + 동영상 촬영",
+                "음성 답변과 함께 웹캠으로 표정, 태도, 시선 분석"),
+            _buildDescriptionItem(
+                Icons.bar_chart, "결과 리포트", "종합 점수, 답변 내용 평가, 표정 분석, 개선점 제시"),
+
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                  color: const Color(0xFFF8F9FA),
+                  borderRadius: BorderRadius.circular(12)),
+              child: Row(
+                children: [
+                  const Icon(Icons.access_time, size: 20, color: Colors.grey),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("예상 소요시간: 약 25분 (준비시간 포함)",
+                            style: GoogleFonts.outfit(
+                                fontWeight: FontWeight.bold, fontSize: 13)),
+                        Text("모든 답변은 저장되며 면접 종료 후 상세 리포트를 확인할 수 있습니다.",
+                            style: GoogleFonts.outfit(
+                                color: Colors.grey, fontSize: 11)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 32),
+
+            // 준비 상태
+            Text("준비 상태",
+                style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 16),
+            _buildPreparationItem("공고 분석", 1.0),
+            _buildPreparationItem("질문 생성", 1.0),
+            _buildPreparationItem("시스템 준비", 1.0),
+
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(8)),
+              child: Row(
+                children: [
+                  const Icon(Icons.check_circle, size: 20, color: Colors.green),
+                  const SizedBox(width: 12),
+                  Text("모든 준비가 완료되었습니다. 면접을 시작하세요.",
+                      style: GoogleFonts.outfit(
+                          color: Colors.green.shade700,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 40),
+          ],
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: () =>
+                      context.push('/interview_session/${widget.projectIndex}'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1E69FF),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    elevation: 0,
+                  ),
+                  child: Text("모의면접 시작하기",
+                      style: GoogleFonts.outfit(
+                          fontSize: 16, fontWeight: FontWeight.bold)),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text("시작 버튼을 누르면 첫 번째 질문이 제시됩니다",
+                  style: GoogleFonts.outfit(color: Colors.grey, fontSize: 12)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDescriptionItem(IconData icon, String title, String desc) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+                color: const Color(0xFFEBF2FF),
+                borderRadius: BorderRadius.circular(10)),
+            child: Icon(icon, size: 20, color: const Color(0xFF1E69FF)),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.bold, fontSize: 14)),
+                const SizedBox(height: 4),
+                Text(desc,
+                    style:
+                        GoogleFonts.outfit(color: Colors.grey, fontSize: 12)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPreparationItem(String label, double value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Row(
+        children: [
+          SizedBox(
+              width: 80,
+              child: Text(label,
+                  style: GoogleFonts.outfit(
+                      fontSize: 14, color: Colors.grey.shade700))),
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: value,
+                backgroundColor: Colors.grey.shade100,
+                color: Colors.green,
+                minHeight: 8,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text("완료",
+              style: GoogleFonts.outfit(
+                  fontSize: 12,
+                  color: Colors.green,
+                  fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+}
+
+// --- 5. 모의면접 실제 진행 화면 ---
+class InterviewSessionPage extends StatefulWidget {
+  final int projectIndex;
+  const InterviewSessionPage({super.key, required this.projectIndex});
+
+  @override
+  State<InterviewSessionPage> createState() => _InterviewSessionPageState();
+}
+
+class _InterviewSessionPageState extends State<InterviewSessionPage> {
+  int currentStep = 1;
+  final int totalSteps = 10;
+  bool isRecording = false;
+
+  final List<String> interviewQuestions = [
+    "지난 프로젝트에서 팀원과 의견 충돌이 발생했을 때, 어떻게 해결하셨나요? 구체적인 사례와 함께 설명해 주세요.",
+    "우리 회사가 진행 중인 주요 서비스에 대해 어떻게 생각하시나요? 어떤 부분을 개선하고 싶으신가요?",
+    "본인의 기술적인 강점을 이 직무에서 어떻게 발휘할 수 있을지 설명해 주세요.",
+    "가장 어려웠던 기술적 문제는 무엇이었으며, 어떻게 극복하셨나요?",
+    "팀워크에서 가장 중요하게 생각하는 가치 세 가지는 무엇인가요?",
+    "새로운 기술 스택을 도입해야 할 때 본인만의 학습 전략은 무엇인가요?",
+    "스트레스 상황에서 본인만의 관리 방법이 있나요?",
+    "5년 후 이 분야에서 어떤 전문성을 가진 개발자가 되고 싶으신가요?",
+    "코드 리뷰 중 본인의 코드에 대해 강한 비판을 받는다면 어떻게 대처하시겠습니까?",
+    "마지막으로 궁금하신 점이나 꼭 하고 싶은 말씀이 있다면 부탁드립니다."
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new,
+              size: 20, color: Colors.black),
+          onPressed: () => context.pop(),
+        ),
+        title: Text('모의면접',
+            style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: Colors.black)),
+        centerTitle: true,
+        actions: [
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: Text("질문 $currentStep / $totalSteps",
+                  style: GoogleFonts.outfit(color: Colors.grey, fontSize: 14)),
+            ),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // 질문 카드
+          Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 40,
+                      offset: const Offset(0, 10)),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                            color: const Color(0xFFEBF2FF),
+                            borderRadius: BorderRadius.circular(10)),
+                        child: const Icon(Icons.smart_toy_outlined,
+                            color: Color(0xFF1E69FF), size: 18),
+                      ),
+                      const SizedBox(width: 12),
+                      Text("AI 면접관 질문",
+                          style: GoogleFonts.outfit(
+                              color: Colors.grey,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14)),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    "\"${interviewQuestions[currentStep - 1]}\"",
+                    style: GoogleFonts.outfit(
+                        fontSize: 17, fontWeight: FontWeight.bold, height: 1.5),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // 웹캠/녹화 영역 (Simulated)
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                color: Color(0xFF161B22),
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.videocam_outlined,
+                          size: 64, color: Colors.grey.shade700),
+                      const SizedBox(height: 16),
+                      Text("웹캠 연결 중...",
+                          style: GoogleFonts.outfit(
+                              color: Colors.grey.shade600, fontSize: 14)),
+                    ],
+                  ),
+                  if (isRecording)
+                    Positioned(
+                      top: 16,
+                      left: 16,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(30)),
+                        child: Row(
+                          children: [
+                            const SizedBox(
+                              width: 8,
+                              height: 8,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white),
+                            ),
+                            const SizedBox(width: 8),
+                            Text("녹화 중",
+                                style: GoogleFonts.outfit(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  if (isRecording)
+                    Positioned(
+                      top: 16,
+                      right: 16,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.6),
+                            borderRadius: BorderRadius.circular(30)),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.access_time,
+                                size: 14, color: Colors.white),
+                            const SizedBox(width: 6),
+                            Text("02:45",
+                                style: GoogleFonts.outfit(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+
+          // 컨트롤러 영역
+          Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Column(
+              children: [
+                if (isRecording)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20)),
+                    child: Text("● 녹화 중",
+                        style: GoogleFonts.outfit(
+                            fontSize: 12, fontWeight: FontWeight.bold)),
+                  ),
+
+                // 녹화 버튼
+                GestureDetector(
+                  onTap: () => setState(() => isRecording = !isRecording),
+                  child: Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.grey.shade200, width: 4),
+                    ),
+                    padding: const EdgeInsets.all(4),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                              color: Colors.red.withOpacity(0.3),
+                              blurRadius: 15,
+                              spreadRadius: 2),
+                        ],
+                      ),
+                      child: Center(
+                        child: Icon(
+                          isRecording ? Icons.stop : Icons.fiber_manual_record,
+                          color: Colors.white,
+                          size: 32,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: currentStep > 1
+                          ? () => setState(() => currentStep--)
+                          : null,
+                      icon: const Icon(Icons.arrow_back_ios, size: 14),
+                      label: Text("이전",
+                          style:
+                              GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                        minimumSize: const Size(100, 48),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (currentStep < totalSteps) {
+                          setState(() {
+                            currentStep++;
+                            isRecording = false;
+                          });
+                        } else {
+                          // 완료 시나리오
+                          final controller = Get.find<HomeController>();
+                          controller.completeInterview(
+                              widget.projectIndex, "기술 면접 모의테스트", 88);
+                          context.pop(); // 임시로 복귀
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1E69FF),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                        minimumSize: const Size(160, 48),
+                        elevation: 0,
+                      ),
+                      child: Row(
+                        children: [
+                          Text(currentStep == totalSteps ? "면접 종료" : "다음 질문",
+                              style: GoogleFonts.outfit(
+                                  fontWeight: FontWeight.bold)),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.arrow_forward_ios, size: 14),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // 하단 툴바
+          Padding(
+            padding: const EdgeInsets.only(bottom: 24.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildToolItem(Icons.mic, "음소거"),
+                _buildToolItem(Icons.videocam, "카메라 끄기"),
+                _buildToolItem(Icons.settings, "설정"),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToolItem(IconData icon, String label) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+              color: Colors.grey.shade100, shape: BoxShape.circle),
+          child: Icon(icon, size: 24, color: Colors.grey.shade700),
+        ),
+        const SizedBox(height: 8),
+        Text(label,
+            style:
+                GoogleFonts.outfit(fontSize: 12, color: Colors.grey.shade600)),
+      ],
     );
   }
 }
