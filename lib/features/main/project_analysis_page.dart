@@ -127,15 +127,21 @@ class ProjectAnalysisPage extends StatelessWidget {
                     _buildStepItem(
                       title: "작성한 자기소개서",
                       content: hasResume
-                          ? (project['resume']['content']?.toString().split('\n').first ?? project['resume']['title'])
+                          ? (project['resume']['content']
+                                  ?.toString()
+                                  .split('\n')
+                                  .first ??
+                              project['resume']['title'])
                           : "자기소개서가 없습니다",
                       isCompleted: hasResume,
                       onAction: () {
                         context.push('/resume_create/$projectIndex');
                       },
-                      onTap: hasResume ? () {
-                        context.push('/resume_writing/$projectIndex');
-                      } : null,
+                      onTap: hasResume
+                          ? () {
+                              context.push('/resume_writing/$projectIndex');
+                            }
+                          : null,
                       actionText: "생성",
                     ),
                     const SizedBox(height: 12),
@@ -148,9 +154,7 @@ class ProjectAnalysisPage extends StatelessWidget {
                           hasInterview ? project['interview']['score'] : null,
                       isCompleted: hasInterview,
                       onAction: () {
-                        context.push('/interview');
-                        controller.completeInterview(
-                            projectIndex, "기술 면접 모의테스트", 85);
+                        context.push('/interview/$projectIndex');
                       },
                       actionText: "시작하기",
                     ),
@@ -228,6 +232,7 @@ class ProjectAnalysisPage extends StatelessWidget {
     bool isCompleted = false,
     int? score,
     required VoidCallback onAction,
+    VoidCallback? onTap,
     required String actionText,
   }) {
     return InkWell(
@@ -240,72 +245,74 @@ class ProjectAnalysisPage extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.grey.shade100),
         ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(title,
-                  style: GoogleFonts.outfit(
-                      fontSize: 14,
-                      color: Colors.grey.shade600,
-                      fontWeight: FontWeight.w500)),
-              if (!isCompleted)
-                InkWell(
-                  onTap: onAction,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEBF2FF),
-                      borderRadius: BorderRadius.circular(8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(title,
+                    style: GoogleFonts.outfit(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w500)),
+                if (!isCompleted)
+                  InkWell(
+                    onTap: onAction,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEBF2FF),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(actionText,
+                          style: GoogleFonts.outfit(
+                              color: const Color(0xFF1E69FF),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold)),
                     ),
-                    child: Text(actionText,
-                        style: GoogleFonts.outfit(
-                            color: const Color(0xFF1E69FF),
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold)),
                   ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  content,
-                  style: GoogleFonts.outfit(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: isCompleted ? Colors.black : Colors.grey.shade300),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              if (isCompleted) ...[
-                if (score != null)
-                  Container(
-                    margin: const EdgeInsets.only(left: 8),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                        color: Colors.green.shade50,
-                        borderRadius: BorderRadius.circular(12)),
-                    child: Text("$score점",
-                        style: GoogleFonts.outfit(
-                            color: Colors.green.shade700,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 11)),
-                  ),
-                const SizedBox(width: 8),
-                const Icon(Icons.arrow_forward_ios,
-                    size: 14, color: Colors.grey),
               ],
-            ],
-          ),
-        ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    content,
+                    style: GoogleFonts.outfit(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color:
+                            isCompleted ? Colors.black : Colors.grey.shade300),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (isCompleted) ...[
+                  if (score != null)
+                    Container(
+                      margin: const EdgeInsets.only(left: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                          color: Colors.green.shade50,
+                          borderRadius: BorderRadius.circular(12)),
+                      child: Text("$score점",
+                          style: GoogleFonts.outfit(
+                              color: Colors.green.shade700,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11)),
+                    ),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.arrow_forward_ios,
+                      size: 14, color: Colors.grey),
+                ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
