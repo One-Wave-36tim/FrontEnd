@@ -173,10 +173,13 @@ class ProjectAnalysisPage extends StatelessWidget {
                           hasSimulation ? project['simulation']['score'] : null,
                       isCompleted: hasSimulation,
                       onAction: () {
-                        context.push('/simulation');
-                        controller.completeSimulation(
-                            projectIndex, "퇴근 전 심각한 버그 발생 상황", 85);
+                        context.push('/simulation/$projectIndex');
                       },
+                      onTap: hasSimulation
+                          ? () {
+                              context.push('/simulation_result/$projectIndex');
+                            }
+                          : null,
                       actionText: "시작하기",
                     ),
                   ],

@@ -2401,9 +2401,16 @@ class _SimulationSessionPageState extends State<SimulationSessionPage> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
-            child: CircleAvatar(
-              radius: 16,
-              backgroundImage: const AssetImage('assets/images/stern_boss.png'),
+            child: Container(
+              width: 32,
+              height: 32,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                image: DecorationImage(
+                  image: AssetImage('assets/images/stern_boss.png'),
+                  fit: BoxFit.cover,
+                ),
+              ),
             ),
           ),
         ],
@@ -2481,15 +2488,23 @@ class _SimulationSessionPageState extends State<SimulationSessionPage> {
         children: [
           if (!msg.isUser) ...[
             Container(
-              padding: const EdgeInsets.all(8),
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
-                  color: Colors.grey.shade100, shape: BoxShape.circle),
+                color: Colors.grey.shade100,
+                shape: BoxShape.circle,
+                image: isBoss
+                    ? const DecorationImage(
+                        image: AssetImage('assets/images/stern_boss.png'),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
+              ),
               child: isSystem
                   ? const Icon(Icons.smart_toy_outlined,
                       size: 20, color: Colors.grey)
                   : (isBoss
-                      ? Image.asset('assets/images/stern_boss.png',
-                          width: 24, height: 24)
+                      ? null
                       : const Icon(Icons.palette_outlined,
                           size: 20, color: Colors.grey)),
             ),
