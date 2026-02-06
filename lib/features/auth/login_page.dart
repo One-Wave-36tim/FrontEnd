@@ -19,7 +19,7 @@ class LoginPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Login',
+              '로그인',
               style: GoogleFonts.outfit(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
@@ -28,7 +28,7 @@ class LoginPage extends StatelessWidget {
             const SizedBox(height: 32),
             TextField(
               decoration: InputDecoration(
-                labelText: 'Email',
+                labelText: '아이디',
                 border:
                     OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
@@ -37,7 +37,7 @@ class LoginPage extends StatelessWidget {
             TextField(
               obscureText: true,
               decoration: InputDecoration(
-                labelText: 'Password',
+                labelText: '비밀번호',
                 border:
                     OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
@@ -54,7 +54,7 @@ class LoginPage extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                 ),
-                child: const Text('Continue'),
+                child: const Text('로그인'),
               ),
             ),
           ],

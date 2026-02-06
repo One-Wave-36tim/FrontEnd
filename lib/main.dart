@@ -4,6 +4,11 @@ import 'package:flutter_application_1/features/auth/login_page.dart';
 import 'package:flutter_application_1/features/auth/signup_id_password_page.dart';
 import 'package:flutter_application_1/features/auth/start_page.dart';
 import 'package:flutter_application_1/features/main/main_page.dart';
+import 'package:flutter_application_1/features/main/my_page.dart';
+import 'package:flutter_application_1/features/main/profile_edit_page.dart';
+import 'package:flutter_application_1/features/main/project_create_page.dart';
+import 'package:flutter_application_1/features/main/project_analysis_page.dart';
+import 'package:flutter_application_1/features/main/prep_pages.dart';
 import 'package:go_router/go_router.dart';
 import 'package:get/get.dart';
 import 'features/controller/home_controller.dart';
@@ -43,6 +48,60 @@ final GoRouter _router = GoRouter(
       builder: (context, state) {
         return const SignupIdpasswordPage();
       },
+    ),
+    GoRoute(
+      path: '/mypage',
+      builder: (context, state) {
+        return const MyPage();
+      },
+    ),
+    GoRoute(
+      path: '/profile_edit',
+      builder: (context, state) {
+        return const ProfileEditPage();
+      },
+    ),
+    GoRoute(
+      path: '/project_create',
+      builder: (context, state) {
+        return const ProjectCreatePage();
+      },
+    ),
+    GoRoute(
+      path: '/project_analysis/:index',
+      builder: (context, state) {
+        final index = int.parse(state.pathParameters['index']!);
+        return ProjectAnalysisPage(projectIndex: index);
+      },
+    ),
+    GoRoute(
+      path: '/resume_create/:index',
+      builder: (context, state) {
+        final index = int.parse(state.pathParameters['index']!);
+        return ResumeIntroPage(projectIndex: index);
+      },
+    ),
+    GoRoute(
+      path: '/resume_interview/:index',
+      builder: (context, state) {
+        final index = int.parse(state.pathParameters['index']!);
+        return ResumeInterviewPage(projectIndex: index);
+      },
+    ),
+    GoRoute(
+      path: '/resume_writing/:index',
+      builder: (context, state) {
+        final index = int.parse(state.pathParameters['index']!);
+        return ResumeWritingPage(projectIndex: index);
+      },
+    ),
+    GoRoute(
+      path: '/interview',
+      builder: (context, state) => const InterviewPage(),
+    ),
+    GoRoute(
+      path: '/simulation',
+      builder: (context, state) => const SimulationPage(),
     ),
   ],
 );
