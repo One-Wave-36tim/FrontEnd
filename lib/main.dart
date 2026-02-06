@@ -9,6 +9,7 @@ import 'package:flutter_application_1/features/main/profile_edit_page.dart';
 import 'package:flutter_application_1/features/main/project_create_page.dart';
 import 'package:flutter_application_1/features/main/project_analysis_page.dart';
 import 'package:flutter_application_1/features/main/prep_pages.dart';
+import 'package:flutter_application_1/features/main/final_feedback_page.dart';
 import 'package:go_router/go_router.dart';
 import 'package:get/get.dart';
 import 'features/controller/home_controller.dart';
@@ -135,6 +136,13 @@ final GoRouter _router = GoRouter(
       builder: (context, state) {
         final index = int.parse(state.pathParameters['index']!);
         return SimulationResultPage(projectIndex: index);
+      },
+    ),
+    GoRoute(
+      path: '/final_feedback/:index',
+      builder: (context, state) {
+        final index = int.parse(state.pathParameters['index']!);
+        return FinalFeedbackPage(projectIndex: index);
       },
     ),
   ],
