@@ -156,6 +156,11 @@ class ProjectAnalysisPage extends StatelessWidget {
                       onAction: () {
                         context.push('/interview/$projectIndex');
                       },
+                      onTap: hasInterview
+                          ? () {
+                              context.push('/interview_result/$projectIndex');
+                            }
+                          : null,
                       actionText: "시작하기",
                     ),
                     const SizedBox(height: 12),
