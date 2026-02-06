@@ -136,7 +136,19 @@ class ResumeIntroPage extends StatelessWidget {
             width: double.infinity,
             height: 56,
             child: ElevatedButton.icon(
-              onPressed: () {
+              onPressed: () async {
+                final controller = Get.find<HomeController>();
+                final ok = await controller
+                    .prepareResumeDraftByProjectIndex(projectIndex);
+                if (!context.mounted) {
+                  return;
+                }
+                if (!ok) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('자소서 초안을 불러오지 못했습니다.')),
+                  );
+                  return;
+                }
                 context.push('/resume_interview/$projectIndex');
               },
               icon: const Icon(Icons.play_arrow_rounded),
@@ -241,75 +253,105 @@ class ResumeInterviewPage extends StatefulWidget {
 }
 
 class _ResumeInterviewPageState extends State<ResumeInterviewPage> {
-  int currentIndex = 0;
-  final int totalQuestions = 10;
-
-  final List<Map<String, dynamic>> questions = [
-    {
-      "question": "이 프로젝트에서 가장 복잡했던 기술적 결정은 무엇이었나요?",
-      "examples": [
-        "당시 선택하지 않은 다른 방법은 무엇이었고 왜 배제했나요?",
-        "당신의 코드가 전체 시스템에 어떤 영향을 주었나요?"
-      ]
-    },
-    {
-      "question": "프로젝트 도중 발생한 가장 큰 갈등 상황과 이를 해결한 방법은 무엇인가요?",
-      "examples": ["팀원과의 의견 차이가 있었나요?", "데이터나 근거를 바탕으로 어떻게 설득했나요?"]
-    },
-    {
-      "question": "해당 직무에서 가장 중요하다고 생각하는 역량을 이 프로젝트에서 어떻게 발휘했나요?",
-      "examples": ["문제 해결 능력인가요, 아니면 협업 능력인가요?", "구체적인 수치나 성과가 있다면 무엇인가요?"]
-    },
-    {
-      "question": "프로젝트 결과물에서 가장 아쉬운 점과 다시 한다면 개선하고 싶은 부분은?",
-      "examples": ["기술적 부채가 남았나요?", "시간적 제약 때문에 포기한 기능이 있나요?"]
-    },
-    {
-      "question": "사용자의 피드백을 받아 서비스를 개선했던 경험이 있나요?",
-      "examples": ["어떤 경로로 피드백을 받았나요?", "피드백을 어떻게 우선순위에 반영했나요?"]
-    },
-    {
-      "question": "이 프로젝트를 통해 새롭게 습득한 기술이나 지식은 무엇인가요?",
-      "examples": ["학습 과정에서 가장 어려웠던 점은?", "현재 실무에서 어떻게 활용하고 있나요?"]
-    },
-    {
-      "question": "성능 최적화를 위해 시도했던 구체적인 노력이 있다면?",
-      "examples": ["로딩 속도 개선인가요, 아니면 메모리 절약인가요?", "최적화 전후의 지표 차이는 어떠했나요?"]
-    },
-    {
-      "question": "코드 리뷰 과정에서 팀원으로부터 받은 가장 기억에 남는 조언은?",
-      "examples": ["본인의 코드 스타일을 어떻게 바꾸었나요?", "협업 효율을 위해 어떤 노력을 했나요?"]
-    },
-    {
-      "question": "프로젝트 일정 관리를 위해 본인이 기여한 바는 무엇인가요?",
-      "examples": [
-        "마감 기한을 지키기 위해 무엇을 포기하거나 강조했나요?",
-        "도구(Jira, Notion 등)를 어떻게 활용했나요?"
-      ]
-    },
-    {
-      "question": "본인이 작성한 코드의 테스트 및 검증은 어떻게 진행했나요?",
-      "examples": ["단위 테스트를 작성했나요?", "엣지 케이스는 어떻게 고려했나요?"]
-    }
-  ];
+  late final HomeController _controller;
+  bool _isLoading = true;
+  int _current = 1;
+  int _total = 6;
+  String _prompt = '';
+  bool _isSubmitting = false;
 
   final TextEditingController _answerController = TextEditingController();
 
-  void _nextQuestion() {
-    if (currentIndex < questions.length - 1) {
-      setState(() {
-        currentIndex++;
-        _answerController.clear();
-      });
-    } else {
-      // 마지막 질문 완료 시 작성 페이지로 이동
-      context.push('/resume_writing/${widget.projectIndex}');
+  @override
+  void initState() {
+    super.initState();
+    _controller = Get.find<HomeController>();
+    _startInterview();
+  }
+
+  Future<void> _startInterview() async {
+    final ok =
+        await _controller.startDeepInterviewByProjectIndex(widget.projectIndex);
+    final state = _controller.getDeepInterviewState(widget.projectIndex);
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _current = state['current'] as int? ?? 1;
+      _total = state['total'] as int? ?? 6;
+      _prompt = state['prompt']?.toString() ?? '';
+      _isLoading = false;
+    });
+    if (!ok || _prompt.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('심층 인터뷰 시작에 실패했습니다.')),
+      );
     }
   }
 
   @override
+  void dispose() {
+    _answerController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submitAnswer() async {
+    if (_isSubmitting) {
+      return;
+    }
+    final answer = _answerController.text.trim();
+    if (answer.length < 5) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('답변을 입력해 주세요.')),
+      );
+      return;
+    }
+    setState(() {
+      _isSubmitting = true;
+    });
+    final ok = await _controller.submitDeepInterviewAnswer(
+      projectIndex: widget.projectIndex,
+      answer: answer,
+    );
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _isSubmitting = false;
+    });
+    if (!ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('답변 제출에 실패했습니다.')),
+      );
+      return;
+    }
+    final state = _controller.getDeepInterviewState(widget.projectIndex);
+    if (state['completed'] == true) {
+      _controller.setSelectedResumeParagraphIndex(widget.projectIndex, 0);
+      context.push('/resume_writing/${widget.projectIndex}');
+      return;
+    }
+    setState(() {
+      _current = state['current'] as int? ?? _current;
+      _total = state['total'] as int? ?? _total;
+      _prompt = state['prompt']?.toString() ?? _prompt;
+      _answerController.clear();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final q = questions[currentIndex];
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (_prompt.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(),
+        body: const Center(child: Text('심층 인터뷰 질문을 불러오지 못했습니다.')),
+      );
+    }
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -348,7 +390,7 @@ class _ResumeInterviewPageState extends State<ResumeInterviewPage> {
                 Text("질문 진행",
                     style: GoogleFonts.outfit(
                         fontSize: 14, fontWeight: FontWeight.w500)),
-                Text("${currentIndex + 1} / ${questions.length}",
+                Text("$_current / $_total",
                     style: GoogleFonts.outfit(
                         fontSize: 14, fontWeight: FontWeight.bold)),
               ],
@@ -357,7 +399,7 @@ class _ResumeInterviewPageState extends State<ResumeInterviewPage> {
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
-                value: (currentIndex + 1) / questions.length,
+                value: _total == 0 ? 0 : (_current / _total),
                 backgroundColor: Colors.grey.shade100,
                 color: const Color(0xFF1E69FF),
                 minHeight: 8,
@@ -407,23 +449,24 @@ class _ResumeInterviewPageState extends State<ResumeInterviewPage> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    q["question"],
+                    _prompt,
                     style: GoogleFonts.outfit(
                         fontSize: 18, fontWeight: FontWeight.bold, height: 1.4),
                   ),
                   const SizedBox(height: 16),
                   const Divider(),
                   const SizedBox(height: 16),
-                  Text("예시 질문 유형:",
+                  Text("답변 가이드:",
                       style: GoogleFonts.outfit(
                           fontSize: 14,
                           color: Colors.black54,
                           fontWeight: FontWeight.w500)),
                   const SizedBox(height: 12),
-                  ...(q["examples"] as List).map((e) => Padding(
-                        padding: const EdgeInsets.only(bottom: 8.0),
-                        child: _buildExampleBullet(e),
-                      )),
+                  _buildExampleBullet("상황-행동-결과(SAR) 순서로 답변"),
+                  const SizedBox(height: 8),
+                  _buildExampleBullet("본인 기여와 팀 기여를 분리해서 설명"),
+                  const SizedBox(height: 8),
+                  _buildExampleBullet("가능하면 수치/지표를 포함"),
                 ],
               ),
             ),
@@ -443,6 +486,7 @@ class _ResumeInterviewPageState extends State<ResumeInterviewPage> {
                   TextField(
                     controller: _answerController,
                     maxLines: 6,
+                    onChanged: (_) => setState(() {}),
                     decoration: InputDecoration(
                       hintText:
                           "질문에 대한 답변을 자세히 작성해 주세요. 구체적인 사례와 데이터를 포함하면 더 좋습니다.",
@@ -475,7 +519,7 @@ class _ResumeInterviewPageState extends State<ResumeInterviewPage> {
                 Text("최소 200자 권장",
                     style:
                         GoogleFonts.outfit(fontSize: 12, color: Colors.grey)),
-                Text("0 / 200",
+                Text("${_answerController.text.length} / 200",
                     style:
                         GoogleFonts.outfit(fontSize: 12, color: Colors.grey)),
               ],
@@ -512,7 +556,7 @@ class _ResumeInterviewPageState extends State<ResumeInterviewPage> {
                 child: SizedBox(
                   height: 56,
                   child: ElevatedButton(
-                    onPressed: _nextQuestion,
+                    onPressed: _isSubmitting ? null : _submitAnswer,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF1E69FF),
                       foregroundColor: Colors.white,
@@ -523,10 +567,7 @@ class _ResumeInterviewPageState extends State<ResumeInterviewPage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                            currentIndex < questions.length - 1
-                                ? "다음 질문"
-                                : "인터뷰 완료",
+                        Text("답변 제출",
                             style: GoogleFonts.outfit(
                                 fontSize: 16, fontWeight: FontWeight.bold)),
                         const SizedBox(width: 8),
@@ -575,21 +616,142 @@ class ResumeWritingPage extends StatefulWidget {
 }
 
 class _ResumeWritingPageState extends State<ResumeWritingPage> {
+  late final HomeController _controller;
   bool isAnalysisExpanded = true;
   late TextEditingController _resumeController;
+  bool _isLoading = true;
+  bool _isSubmitting = false;
+  List<Map<String, dynamic>> _paragraphs = const [];
+  List<Map<String, dynamic>> _interviewSummary = const [];
+  int _selectedParagraphIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    final controller = Get.find<HomeController>();
-    final project = controller.projects[widget.projectIndex];
-    final existingContent = project['resume']?['content'] ?? "";
-    _resumeController = TextEditingController(text: existingContent);
+    _controller = Get.find<HomeController>();
+    _resumeController = TextEditingController();
+    _loadDraft();
+  }
+
+  Future<void> _loadDraft() async {
+    final ok =
+        await _controller.prepareResumeDraftByProjectIndex(widget.projectIndex);
+    final paragraphs = _controller.getResumeParagraphs(widget.projectIndex);
+    final selected =
+        _controller.getSelectedResumeParagraphIndex(widget.projectIndex);
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _paragraphs = paragraphs;
+      _interviewSummary =
+          _controller.getResumeInterviewSummary(widget.projectIndex);
+      _selectedParagraphIndex =
+          paragraphs.isEmpty ? 0 : selected.clamp(0, paragraphs.length - 1);
+      _resumeController.text = paragraphs.isEmpty
+          ? ''
+          : (_paragraphs[_selectedParagraphIndex]['text']?.toString() ?? '');
+      _isLoading = false;
+    });
+    if (!ok || paragraphs.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('자소서 문단 정보를 불러오지 못했습니다.')),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _resumeController.dispose();
+    super.dispose();
+  }
+
+  Map<String, dynamic>? get _selectedParagraph {
+    if (_paragraphs.isEmpty) {
+      return null;
+    }
+    if (_selectedParagraphIndex < 0 ||
+        _selectedParagraphIndex >= _paragraphs.length) {
+      return null;
+    }
+    return _paragraphs[_selectedParagraphIndex];
+  }
+
+  Future<void> _completeCurrentParagraph() async {
+    final paragraph = _selectedParagraph;
+    if (paragraph == null || _isSubmitting) {
+      return;
+    }
+    if (_resumeController.text.trim().length < 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("내용을 좀 더 작성해 주세요.")),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+    });
+    final ok = await _controller.completeResumeParagraph(
+      projectIndex: widget.projectIndex,
+      paragraphIndex: _selectedParagraphIndex,
+      text: _resumeController.text.trim(),
+    );
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _isSubmitting = false;
+    });
+    if (!ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('문단 완료 처리에 실패했습니다.')),
+      );
+      return;
+    }
+
+    await _loadDraft();
+    if (!mounted) {
+      return;
+    }
+    final allCompleted = _paragraphs.isNotEmpty &&
+        _paragraphs
+            .every((item) => (item['status']?.toString() ?? '') == 'COMPLETED');
+    if (allCompleted) {
+      context.go('/project_analysis/${widget.projectIndex}');
+      return;
+    }
+    final nextIndex = _paragraphs.indexWhere(
+      (item) => (item['status']?.toString() ?? '') != 'COMPLETED',
+    );
+    if (nextIndex >= 0) {
+      setState(() {
+        _selectedParagraphIndex = nextIndex;
+        _resumeController.text =
+            _paragraphs[_selectedParagraphIndex]['text']?.toString() ?? '';
+      });
+      _controller.setSelectedResumeParagraphIndex(
+          widget.projectIndex, nextIndex);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('다음 문단 작성을 이어서 진행해 주세요.')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<HomeController>();
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (_paragraphs.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(),
+        body: const Center(child: Text('자소서 문단이 없습니다.')),
+      );
+    }
+    final selected = _selectedParagraph!;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -613,7 +775,7 @@ class _ResumeWritingPageState extends State<ResumeWritingPage> {
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                     color: Colors.black)),
-            Text('문단별 작성 및 분석',
+            Text(selected['title']?.toString() ?? '문단별 작성 및 분석',
                 style: GoogleFonts.outfit(fontSize: 12, color: Colors.grey)),
           ],
         ),
@@ -688,30 +850,40 @@ class _ResumeWritingPageState extends State<ResumeWritingPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text("프로젝트 심층 인터뷰 결과",
+                          Text("프로젝트 심층 인터뷰 결과 요약",
                               style: GoogleFonts.outfit(
                                   fontWeight: FontWeight.bold, fontSize: 15)),
                           const SizedBox(height: 20),
-                          _buildAnalysisResultItem(
-                            icon: Icons.lightbulb_outline,
-                            title: "핵심 질문 1: 프로젝트 참여 동기 및 역할",
-                            content:
-                                "프로젝트 참여 동기하는 것이와 캐드익스섹를 종기 및 역을 건과 한고, 중계룩 복판과 한고 있는 참여 역할. 프로젝트 참여있더의 역할을 작이하면 분석적를 안해 보고졌고 이 거되어 추척하지 않아한다.",
-                          ),
-                          const SizedBox(height: 16),
-                          _buildAnalysisResultItem(
-                            icon: Icons.people_outline,
-                            title: "핵심 질문 2: 협업 경험 및 갈등 해결",
-                            content:
-                                "협업 경험과 테어스 어낸봄, 7에게 중복하고 갖혔하고 별공적으로 인터뷰를 위한 해보는: 갈과동의 협업 갈등을 토한 해도르 드리다: 순조비 파동아있고, 협업고 1차여 갈정합니다.",
-                          ),
-                          const SizedBox(height: 16),
-                          _buildAnalysisResultItem(
-                            icon: Icons.emoji_events_outlined,
-                            title: "핵심 질문 3: 성과 및 배운 점",
-                            content:
-                                "자화 퍽지가 1-33㎡역 성과력으로 등이 성과하고 해 장 이아고 역하라. 최대 성격한 50%안 목 찰을 되요. 성과 배운을 정하고 있는 성과 및 배운 점 델 춤-의격 해 용하면 성과를 거켜.",
-                          ),
+                          if (_interviewSummary.isEmpty)
+                            Text(
+                              '심층 인터뷰 답변이 아직 없습니다. 위 단계에서 답변을 작성해 주세요.',
+                              style: GoogleFonts.outfit(
+                                fontSize: 13,
+                                color: Colors.black54,
+                                height: 1.5,
+                              ),
+                            )
+                          else
+                            ..._interviewSummary.asMap().entries.map((entry) {
+                              final idx = entry.key;
+                              final item = entry.value;
+                              return Padding(
+                                padding: EdgeInsets.only(
+                                    bottom: idx == _interviewSummary.length - 1
+                                        ? 0
+                                        : 16),
+                                child: _buildAnalysisResultItem(
+                                  icon: _analysisIconByIndex(idx),
+                                  title:
+                                      "핵심 질문 ${idx + 1}: ${item['paragraphTitle'] ?? '문단'}",
+                                  content:
+                                      item['summary']?.toString().isNotEmpty ==
+                                              true
+                                          ? item['summary'].toString()
+                                          : (item['answer']?.toString() ?? ''),
+                                ),
+                              );
+                            }),
                         ],
                       ),
                     ),
@@ -720,6 +892,30 @@ class _ResumeWritingPageState extends State<ResumeWritingPage> {
               ),
             ),
             const SizedBox(height: 32),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _paragraphs.asMap().entries.map((entry) {
+                final idx = entry.key;
+                final item = entry.value;
+                final isSelected = idx == _selectedParagraphIndex;
+                final completed =
+                    (item['status']?.toString() ?? '') == 'COMPLETED';
+                return ChoiceChip(
+                  label: Text('${item['title']} ${completed ? "(완료)" : ""}'),
+                  selected: isSelected,
+                  onSelected: (_) {
+                    setState(() {
+                      _selectedParagraphIndex = idx;
+                      _resumeController.text = item['text']?.toString() ?? '';
+                    });
+                    _controller.setSelectedResumeParagraphIndex(
+                        widget.projectIndex, idx);
+                  },
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 24),
             // 자소서 입력칸 (추가됨)
             Container(
               padding: const EdgeInsets.all(20),
@@ -734,6 +930,10 @@ class _ResumeWritingPageState extends State<ResumeWritingPage> {
                   Text("자기소개서 작성",
                       style: GoogleFonts.outfit(
                           fontWeight: FontWeight.bold, fontSize: 15)),
+                  const SizedBox(height: 4),
+                  Text("제한 글자 수: ${selected['charLimit'] ?? 0}",
+                      style:
+                          GoogleFonts.outfit(fontSize: 12, color: Colors.grey)),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _resumeController,
@@ -753,7 +953,10 @@ class _ResumeWritingPageState extends State<ResumeWritingPage> {
             const SizedBox(height: 32),
             // 채팅 바텀시트 유도 버튼
             InkWell(
-              onTap: () => _showChatBottomSheet(context),
+              onTap: () => _showChatBottomSheet(
+                context,
+                paragraphIndex: _selectedParagraphIndex,
+              ),
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -788,23 +991,20 @@ class _ResumeWritingPageState extends State<ResumeWritingPage> {
             width: double.infinity,
             height: 56,
             child: ElevatedButton.icon(
-              onPressed: () {
-                // 자소서 완료 시뮬레이션
-                if (_resumeController.text.length < 10) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("내용을 좀 더 작성해 주세요.")),
-                  );
-                  return;
-                }
-                final project = controller.projects[widget.projectIndex];
-                controller.completeResume(widget.projectIndex,
-                    "${project['job']} 지원서", _resumeController.text);
-                context.go('/project_analysis/${widget.projectIndex}');
-              },
+              onPressed: _isSubmitting ? null : _completeCurrentParagraph,
               icon: const Icon(Icons.check),
-              label: Text("작성 완료",
-                  style: GoogleFonts.outfit(
-                      fontSize: 16, fontWeight: FontWeight.bold)),
+              label: _isSubmitting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text("문단 완료",
+                      style: GoogleFonts.outfit(
+                          fontSize: 16, fontWeight: FontWeight.bold)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF0F172A),
                 foregroundColor: Colors.white,
@@ -845,17 +1045,38 @@ class _ResumeWritingPageState extends State<ResumeWritingPage> {
     );
   }
 
-  void _showChatBottomSheet(BuildContext context) {
+  IconData _analysisIconByIndex(int index) {
+    final icons = [
+      Icons.lightbulb_outline,
+      Icons.people_outline,
+      Icons.emoji_events_outlined,
+    ];
+    return icons[index % icons.length];
+  }
+
+  void _showChatBottomSheet(BuildContext context,
+      {required int paragraphIndex}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _ChatBotSheet(),
+      builder: (context) => _ChatBotSheet(
+        onAsk: (userQuestion) => _controller.askResumeCoach(
+          projectIndex: widget.projectIndex,
+          paragraphIndex: paragraphIndex,
+          paragraphText: _resumeController.text.trim(),
+          userQuestion: userQuestion,
+        ),
+      ),
     );
   }
 }
 
 class _ChatBotSheet extends StatefulWidget {
+  const _ChatBotSheet({required this.onAsk});
+
+  final Future<String> Function(String userQuestion) onAsk;
+
   @override
   State<_ChatBotSheet> createState() => _ChatBotSheetState();
 }
@@ -869,31 +1090,28 @@ class _ChatBotSheetState extends State<_ChatBotSheet> {
   ];
   final TextEditingController _chatController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  bool _isWaiting = false;
 
-  void _sendMessage() {
+  Future<void> _sendMessage() async {
     if (_chatController.text.trim().isEmpty) return;
+    if (_isWaiting) return;
 
+    final userMsg = _chatController.text.trim();
     setState(() {
-      _messages.add({"role": "user", "content": _chatController.text});
+      _messages.add({"role": "user", "content": userMsg});
+      _isWaiting = true;
     });
-
-    final userMsg = _chatController.text;
     _chatController.clear();
     _scrollToBottom();
-
-    // AI 응답 시뮬레이션
-    Future.delayed(const Duration(seconds: 1), () {
-      if (mounted) {
-        setState(() {
-          _messages.add({
-            "role": "ai",
-            "content":
-                "'$userMsg'에 대한 분석 결과, 문단의 구체성을 높이기 위해 당시 상황의 수치를 추가해보는 것은 어떨까요?"
-          });
-        });
-        _scrollToBottom();
-      }
+    final aiMessage = await widget.onAsk(userMsg);
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _messages.add({"role": "ai", "content": aiMessage});
+      _isWaiting = false;
     });
+    _scrollToBottom();
   }
 
   void _scrollToBottom() {
@@ -2206,8 +2424,21 @@ class SimulationIntroPage extends StatelessWidget {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: () =>
-                      context.push('/simulation_session/$projectIndex'),
+                  onPressed: () async {
+                    final controller = Get.find<HomeController>();
+                    final ok = await controller
+                        .startSimulationByProjectIndex(projectIndex);
+                    if (!context.mounted) {
+                      return;
+                    }
+                    if (!ok) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('시뮬레이션 시작에 실패했습니다.')),
+                      );
+                      return;
+                    }
+                    context.push('/simulation_session/$projectIndex');
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF1E69FF),
                     foregroundColor: Colors.white,
@@ -2293,7 +2524,6 @@ class _SimulationSessionPageState extends State<SimulationSessionPage> {
   final List<SimulationMessage> _messages = [];
   final TextEditingController _inputController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  int _interactionCount = 0;
   bool _isTyping = false;
 
   @override
@@ -2303,16 +2533,22 @@ class _SimulationSessionPageState extends State<SimulationSessionPage> {
   }
 
   void _startSimulation() {
-    _addBotMessage(
-      "시스템: 프론트엔드 개발자\n\"기획자와 디자인어가 새로운 기능의 우선순위를 두고 논쟁 중입니다. 기획자는 MVP 출시를 위해 기능 A를, 디자이너는 사용자 경험을 위해 기능 B를 우선해야 한다고 주장합니다. 당신은 어떻게 조율하시겠습니까?\"",
-      profileType: 'system',
-    );
-    Future.delayed(const Duration(seconds: 1), () {
-      _addBotMessage(
-        "기획자\n\"기능 A는 비즈니스 가치가 훨씬 높아요. 데이터도 그렇게 말하고 있고, 다음 분기 목표와 직접 연결됩니다. 지금 리소스가 한정된 상황에서 B는 뒤로 미뤄야 해요.\"",
-        profileType: 'boss',
+    final controller = Get.find<HomeController>();
+    final rows = controller.getSimulationMessages(widget.projectIndex);
+    for (final row in rows) {
+      final role = row['role']?.toString() ?? 'npc';
+      final speaker = row['speaker']?.toString() ?? '';
+      _messages.add(
+        SimulationMessage(
+          text: row['text']?.toString() ?? '',
+          isUser: role == 'user',
+          time: DateTime.now(),
+          profileType: _profileTypeFromSpeaker(speaker),
+        ),
       );
-    });
+    }
+    setState(() {});
+    _scrollToBottom();
   }
 
   void _addBotMessage(String text, {String? profileType}) {
@@ -2326,7 +2562,17 @@ class _SimulationSessionPageState extends State<SimulationSessionPage> {
     _scrollToBottom();
   }
 
-  void _sendMessage() {
+  String? _profileTypeFromSpeaker(String speaker) {
+    if (speaker.contains('기획')) {
+      return 'boss';
+    }
+    if (speaker.contains('시스템')) {
+      return 'system';
+    }
+    return 'coworker';
+  }
+
+  void _sendMessage() async {
     if (_inputController.text.trim().isEmpty) return;
     String userText = _inputController.text.trim();
     _inputController.clear();
@@ -2334,27 +2580,38 @@ class _SimulationSessionPageState extends State<SimulationSessionPage> {
     setState(() {
       _messages.add(SimulationMessage(
           text: userText, isUser: true, time: DateTime.now()));
-      _interactionCount++;
       _isTyping = true;
     });
     _scrollToBottom();
 
-    // AI Response Simulation
-    Future.delayed(const Duration(seconds: 1), () {
-      if (!mounted) return;
-      setState(() => _isTyping = false);
-      if (_interactionCount == 1) {
-        _addBotMessage(
-            "디자이너\n\"기능 B가 없으면 사용자 이탈률이 30% 이상 올라갈 거예요. 지금 당장의 비즈니스 가치보다 장기적인 사용자 유지가 더 중요하다고 봅니다. A는 다음 업데이트로 넘겨도 돼요.\"",
-            profileType: 'coworker');
-      } else if (_interactionCount < 5) {
-        _addBotMessage(
-            "기획자 (찡그린 표정으로)\n\"사용자 답변을 확인했습니다. 하지만 제 질문의 요지는 리소스가 부족한 상황에서의 '조율'입니다. 단순히 한쪽 편을 드는 것이 아니라, 양측의 타협점을 제시할 수 없나요?\"",
-            profileType: 'boss');
-      } else {
-        _finishSimulation();
-      }
-    });
+    final controller = Get.find<HomeController>();
+    final ok = await controller.appendSimulationTurn(
+      projectIndex: widget.projectIndex,
+      text: userText,
+    );
+    if (!mounted) return;
+    setState(() => _isTyping = false);
+    if (!ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('시뮬레이션 응답을 받지 못했습니다.')),
+      );
+      return;
+    }
+
+    final rows = controller.getSimulationMessages(widget.projectIndex);
+    if (rows.isNotEmpty) {
+      final row = rows.last;
+      _addBotMessage(
+        row['text']?.toString() ?? '',
+        profileType: _profileTypeFromSpeaker(row['speaker']?.toString() ?? ''),
+      );
+    }
+
+    final done =
+        controller.projects[widget.projectIndex]['simulationDone'] == true;
+    if (done) {
+      _finishSimulation();
+    }
   }
 
   void _finishSimulation() {
@@ -2363,9 +2620,6 @@ class _SimulationSessionPageState extends State<SimulationSessionPage> {
         profileType: 'system');
     Future.delayed(const Duration(seconds: 2), () {
       if (!mounted) return;
-      final controller = Get.find<HomeController>();
-      controller.completeSimulation(
-          widget.projectIndex, "IT 프로젝트 기획/디자인 조율", 92);
       context.go('/simulation_result/${widget.projectIndex}');
     });
   }
@@ -2611,6 +2865,14 @@ class SimulationResultPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.find<HomeController>();
+    final project = controller.projects[projectIndex];
+    final result =
+        (project['simulationResult'] as Map?)?.cast<String, dynamic>() ??
+            const <String, dynamic>{};
+    final score = (result['fitScorePercent'] as num?)?.toInt() ?? 92;
+    final rankLabel = result['rankLabel']?.toString() ?? '상위 8%';
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -2640,7 +2902,7 @@ class SimulationResultPage extends StatelessWidget {
             Text("직무 적합도 평가",
                 style: GoogleFonts.outfit(color: Colors.grey, fontSize: 14)),
             const SizedBox(height: 12),
-            Text("92%",
+            Text("$score%",
                 style: GoogleFonts.outfit(
                     fontWeight: FontWeight.bold,
                     fontSize: 56,
@@ -2674,7 +2936,7 @@ class SimulationResultPage extends StatelessWidget {
                   Text("역량 분석",
                       style: GoogleFonts.outfit(
                           fontWeight: FontWeight.bold, fontSize: 16)),
-                  Text("상위 8%",
+                  Text(rankLabel,
                       style:
                           GoogleFonts.outfit(color: Colors.grey, fontSize: 12)),
                 ],
