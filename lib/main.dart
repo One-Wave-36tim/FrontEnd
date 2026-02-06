@@ -96,8 +96,18 @@ final GoRouter _router = GoRouter(
       },
     ),
     GoRoute(
-      path: '/interview',
-      builder: (context, state) => const InterviewPage(),
+      path: '/interview/:index',
+      builder: (context, state) {
+        final index = int.parse(state.pathParameters['index']!);
+        return InterviewIntroPage(projectIndex: index);
+      },
+    ),
+    GoRoute(
+      path: '/interview_session/:index',
+      builder: (context, state) {
+        final index = int.parse(state.pathParameters['index']!);
+        return InterviewSessionPage(projectIndex: index);
+      },
     ),
     GoRoute(
       path: '/simulation',
