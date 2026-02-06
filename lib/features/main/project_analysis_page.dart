@@ -470,11 +470,16 @@ class ProjectAnalysisPage extends StatelessWidget {
             height: 52,
             child: ElevatedButton(
               onPressed: () {
-                if (isAllCompleted) {
-                  Get.snackbar("성공", "최종 피드백 화면으로 이동합니다.");
-                } else {
-                  Get.snackbar("알림", "모든 단계를 완료해주세요.",
-                      snackPosition: SnackPosition.BOTTOM);
+                // as requested by the user to see the final feedback screen.
+                context.push('/final_feedback/$projectIndex');
+
+                if (!isAllCompleted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("일부 단계가 미완료되었지만, 시뮬레이션된 결과를 보여줍니다."),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
                 }
               },
               style: ElevatedButton.styleFrom(
