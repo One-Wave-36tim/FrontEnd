@@ -791,7 +791,9 @@ class _ResumeWritingPageState extends State<ResumeWritingPage> {
               onPressed: () {
                 // 자소서 완료 시뮬레이션
                 if (_resumeController.text.length < 10) {
-                  Get.snackbar("알림", "내용을 좀 더 작성해 주세요.");
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("내용을 좀 더 작성해 주세요.")),
+                  );
                   return;
                 }
                 final project = controller.projects[widget.projectIndex];
