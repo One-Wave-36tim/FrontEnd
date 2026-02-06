@@ -70,17 +70,12 @@ class MainPage extends StatelessWidget {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: const Color(0xFF1A1F26),
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
     );
   }
 
   Widget _buildDrawer(BuildContext context) {
     return Drawer(
+      backgroundColor: Colors.white,
       child: Column(
         children: [
           DrawerHeader(
@@ -198,7 +193,7 @@ class MainPage extends StatelessWidget {
                 child: Column(
                   children: [
                     Icon(Icons.add_circle_outline,
-                        color: Colors.blue.shade300, size: 40),
+                        color: Colors.grey.shade300, size: 32),
                     const SizedBox(height: 8),
                     Text(
                       "나의 정보 입력",
@@ -305,7 +300,7 @@ class MainPage extends StatelessWidget {
                   '진행 중',
                   style: GoogleFonts.outfit(
                     fontSize: 11,
-                    color: Colors.blue.shade600,
+                    color: const Color(0xFF1E69FF),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -394,9 +389,15 @@ class MainPage extends StatelessWidget {
                       fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 const SizedBox(height: 16),
-                _buildRoutineItem("자소서 1개 첨삭 완료하기"),
-                _buildRoutineItem("모의 면접 1회 진행하기"),
-                _buildRoutineItem("관심 기업 채용 공고 확인"),
+                ...controller.routines.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final routine = entry.value;
+                  return _buildRoutineItem(
+                    routine['title'],
+                    routine['isCompleted'],
+                    () => controller.toggleRoutine(index),
+                  );
+                }).toList(),
               ],
             )
           : Center(
@@ -408,26 +409,45 @@ class MainPage extends StatelessWidget {
     );
   }
 
-  Widget _buildRoutineItem(String title) {
+  Widget _buildRoutineItem(String title, bool isSelected, VoidCallback onTap) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Container(
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.grey.shade300, width: 2),
-            ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            children: [
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color:
+                      isSelected ? const Color(0xFF1E69FF) : Colors.transparent,
+                  border: Border.all(
+                    color: isSelected
+                        ? const Color(0xFF1E69FF)
+                        : Colors.grey.shade300,
+                    width: 2,
+                  ),
+                ),
+                child: isSelected
+                    ? const Icon(Icons.check, color: Colors.white, size: 14)
+                    : null,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                title,
+                style: GoogleFonts.outfit(
+                  fontSize: 15,
+                  color: isSelected ? Colors.black87 : Colors.grey.shade700,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          Text(
-            title,
-            style:
-                GoogleFonts.outfit(fontSize: 15, color: Colors.grey.shade700),
-          ),
-        ],
+        ),
       ),
     );
   }

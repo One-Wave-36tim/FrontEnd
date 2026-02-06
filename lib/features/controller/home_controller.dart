@@ -20,6 +20,13 @@ class HomeController extends GetxController {
   // .obs를 붙여서 UI가 이 값이 변할 때마다 자동으로 다시 그려지게 함
   var hoveredStepIndex = (-1).obs;
 
+  // 오늘의 루틴 상태
+  var routines = <Map<String, dynamic>>[
+    {'title': "자소서 1개 첨삭 완료하기", 'isCompleted': false},
+    {'title': "모의 면접 1회 진행하기", 'isCompleted': false},
+    {'title': "관심 기업 채용 공고 확인", 'isCompleted': false},
+  ].obs;
+
   // --- 2. 액션 (Actions) ---
 
   // 정보 입력 시뮬레이션
@@ -95,6 +102,13 @@ class HomeController extends GetxController {
         hoveredStepIndex.value = -1;
       }
     }
+  }
+
+  // 루틴 토글 액션
+  void toggleRoutine(int index) {
+    var routine = Map<String, dynamic>.from(routines[index]);
+    routine['isCompleted'] = !routine['isCompleted'];
+    routines[index] = routine;
   }
 
   // '지금 시작하기' 버튼 클릭 시

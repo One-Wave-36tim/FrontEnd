@@ -53,7 +53,13 @@ class ProjectAnalysisPage extends StatelessWidget {
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new,
                 size: 20, color: Colors.black),
-            onPressed: () => context.pop(),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/');
+              }
+            },
           ),
           title: Text(
             "$title-$job",

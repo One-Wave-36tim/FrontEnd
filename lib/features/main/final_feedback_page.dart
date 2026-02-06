@@ -82,7 +82,7 @@ class FinalFeedbackPage extends StatelessWidget {
 
             const SizedBox(height: 32),
             // 추천 루틴 카드
-            _buildRoutineCard(),
+            _buildRoutineCard(context),
             const SizedBox(height: 48),
           ],
         ),
@@ -374,7 +374,7 @@ class FinalFeedbackPage extends StatelessWidget {
     );
   }
 
-  Widget _buildRoutineCard() {
+  Widget _buildRoutineCard(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24),
       width: double.infinity,
@@ -431,7 +431,7 @@ class FinalFeedbackPage extends StatelessWidget {
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: () => context.go('/'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   foregroundColor: const Color(0xFF1E69FF),
