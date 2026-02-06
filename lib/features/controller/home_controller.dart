@@ -67,9 +67,9 @@ class HomeController extends GetxController {
   }
 
   // 준비 단계 완료 메서드들
-  void completeResume(int index, String title) {
+  void completeResume(int index, String title, String content) {
     var project = Map<String, dynamic>.from(projects[index]);
-    project['resume'] = {'title': title};
+    project['resume'] = {'title': title, 'content': content};
     projects[index] = project;
   }
 

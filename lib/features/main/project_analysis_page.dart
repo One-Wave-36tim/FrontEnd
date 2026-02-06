@@ -127,12 +127,15 @@ class ProjectAnalysisPage extends StatelessWidget {
                     _buildStepItem(
                       title: "작성한 자기소개서",
                       content: hasResume
-                          ? project['resume']['title']
+                          ? (project['resume']['content']?.toString().split('\n').first ?? project['resume']['title'])
                           : "자기소개서가 없습니다",
                       isCompleted: hasResume,
                       onAction: () {
                         context.push('/resume_create/$projectIndex');
                       },
+                      onTap: hasResume ? () {
+                        context.push('/resume_writing/$projectIndex');
+                      } : null,
                       actionText: "생성",
                     ),
                     const SizedBox(height: 12),
@@ -227,13 +230,16 @@ class ProjectAnalysisPage extends StatelessWidget {
     required VoidCallback onAction,
     required String actionText,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade100),
-      ),
+    return InkWell(
+      onTap: isCompleted ? onTap : null,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade100),
+        ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

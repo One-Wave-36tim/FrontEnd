@@ -575,6 +575,7 @@ class ResumeWritingPage extends StatefulWidget {
 
 class _ResumeWritingPageState extends State<ResumeWritingPage> {
   bool isAnalysisExpanded = true;
+  final TextEditingController _resumeController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -709,6 +710,37 @@ class _ResumeWritingPageState extends State<ResumeWritingPage> {
               ),
             ),
             const SizedBox(height: 32),
+            // 자소서 입력칸 (추가됨)
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8F9FA),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("자기소개서 작성",
+                      style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.bold, fontSize: 15)),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _resumeController,
+                    maxLines: 15,
+                    decoration: InputDecoration(
+                      hintText:
+                          "위 심층 인터뷰 결과를 참고하여 자기소개서를 작성해 보세요. AI 가이드를 통해 내용을 보강할 수 있습니다.",
+                      hintStyle: GoogleFonts.outfit(
+                          color: Colors.grey.shade400, fontSize: 14),
+                      border: InputBorder.none,
+                    ),
+                    style: GoogleFonts.outfit(fontSize: 15, height: 1.6),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
             // 채팅 바텀시트 유도 버튼
             InkWell(
               onTap: () => _showChatBottomSheet(context),
@@ -748,9 +780,13 @@ class _ResumeWritingPageState extends State<ResumeWritingPage> {
             child: ElevatedButton.icon(
               onPressed: () {
                 // 자소서 완료 시뮬레이션
+                if (_resumeController.text.length < 10) {
+                  Get.snackbar("알림", "내용을 좀 더 작성해 주세요.");
+                  return;
+                }
                 final project = controller.projects[widget.projectIndex];
-                controller.completeResume(
-                    widget.projectIndex, "${project['job']} 지원서");
+                controller.completeResume(widget.projectIndex,
+                    "${project['job']} 지원서", _resumeController.text);
                 context.go('/project_analysis/${widget.projectIndex}');
               },
               icon: const Icon(Icons.check),
@@ -802,92 +838,177 @@ class _ResumeWritingPageState extends State<ResumeWritingPage> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.7,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(24), topRight: Radius.circular(24)),
-        ),
-        child: Column(
-          children: [
-            Container(
-                margin: const EdgeInsets.all(12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2))),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      builder: (context) => _ChatBotSheet(),
+    );
+  }
+}
+
+class _ChatBotSheet extends StatefulWidget {
+  @override
+  State<_ChatBotSheet> createState() => _ChatBotSheetState();
+}
+
+class _ChatBotSheetState extends State<_ChatBotSheet> {
+  final List<Map<String, String>> _messages = [
+    {
+      "role": "ai",
+      "content": "안녕하세요! 현재 작성 중인 문단에 대해 궁금한 점이나 개선하고 싶은 부분이 있다면 말씀해 주세요."
+    }
+  ];
+  final TextEditingController _chatController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+
+  void _sendMessage() {
+    if (_chatController.text.trim().isEmpty) return;
+
+    setState(() {
+      _messages.add({"role": "user", "content": _chatController.text});
+    });
+
+    final userMsg = _chatController.text;
+    _chatController.clear();
+    _scrollToBottom();
+
+    // AI 응답 시뮬레이션
+    Future.delayed(const Duration(seconds: 1), () {
+      if (mounted) {
+        setState(() {
+          _messages.add({
+            "role": "ai",
+            "content":
+                "'$userMsg'에 대한 분석 결과, 문단의 구체성을 높이기 위해 당시 상황의 수치를 추가해보는 것은 어떨까요?"
+          });
+        });
+        _scrollToBottom();
+      }
+    });
+  }
+
+  void _scrollToBottom() {
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.75,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24), topRight: Radius.circular(24)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            margin: const EdgeInsets.all(12),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2)),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            child: Row(
+              children: [
+                const Icon(Icons.smart_toy_outlined, color: Color(0xFF1E69FF)),
+                const SizedBox(width: 12),
+                Text("AI 어시스턴트",
+                    style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.bold, fontSize: 16)),
+                const Spacer(),
+                IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close)),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          Expanded(
+            child: ListView.builder(
+              controller: _scrollController,
+              padding: const EdgeInsets.all(24),
+              itemCount: _messages.length,
+              itemBuilder: (context, index) {
+                final msg = _messages[index];
+                return _buildChatBubble(msg["role"] == "ai", msg["content"]!);
+              },
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+              left: 16,
+              right: 16,
+              top: 8,
+            ),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8F9FA),
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
               child: Row(
                 children: [
-                  const Icon(Icons.smart_toy_outlined,
-                      color: Color(0xFF1E69FF)),
-                  const SizedBox(width: 12),
-                  Text("AI 어시스턴트",
-                      style: GoogleFonts.outfit(
-                          fontWeight: FontWeight.bold, fontSize: 16)),
-                  const Spacer(),
+                  Expanded(
+                    child: TextField(
+                      controller: _chatController,
+                      onSubmitted: (_) => _sendMessage(),
+                      decoration: InputDecoration(
+                        hintText: "메시지를 입력하세요...",
+                        hintStyle: GoogleFonts.outfit(
+                            fontSize: 14, color: Colors.grey),
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ),
                   IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.close)),
+                    onPressed: _sendMessage,
+                    icon: const Icon(Icons.send, color: Color(0xFF1E69FF)),
+                  ),
                 ],
               ),
             ),
-            const Divider(),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.all(24),
-                children: [
-                  _buildChatMessage(
-                      "안녕하세요! 현재 작성 중인 문단에 대해 궁금한 점이나 개선하고 싶은 부분이 있다면 말씀해 주세요."),
-                ],
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-                  left: 16,
-                  right: 16,
-                  top: 8),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                    color: const Color(0xFFF8F9FA),
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(color: Colors.grey.shade200)),
-                child: Row(
-                  children: [
-                    const Expanded(
-                        child: TextField(
-                            decoration: InputDecoration(
-                                hintText: "메시지를 입력하세요...",
-                                border: InputBorder.none))),
-                    IconButton(
-                        onPressed: () {},
-                        icon: const Icon(Icons.send, color: Color(0xFF1E69FF))),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildChatMessage(String text) {
+  Widget _buildChatBubble(bool isAi, String text) {
     return Align(
-      alignment: Alignment.centerLeft,
+      alignment: isAi ? Alignment.centerLeft : Alignment.centerRight,
       child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(16),
+        constraints:
+            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
         decoration: BoxDecoration(
-            color: const Color(0xFFF0F6FF),
-            borderRadius: BorderRadius.circular(16)),
-        child: Text(text,
-            style: GoogleFonts.outfit(
-                fontSize: 14, color: Colors.black87, height: 1.5)),
+          color: isAi ? const Color(0xFFF0F6FF) : const Color(0xFF1E69FF),
+          borderRadius: BorderRadius.only(
+            topLeft: const Radius.circular(16),
+            topRight: const Radius.circular(16),
+            bottomLeft: Radius.circular(isAi ? 0 : 16),
+            bottomRight: Radius.circular(isAi ? 16 : 0),
+          ),
+        ),
+        child: Text(
+          text,
+          style: GoogleFonts.outfit(
+            fontSize: 14,
+            color: isAi ? Colors.black87 : Colors.white,
+            height: 1.5,
+          ),
+        ),
       ),
     );
   }
