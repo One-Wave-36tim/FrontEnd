@@ -49,7 +49,9 @@ class _ProjectCreatePageState extends State<ProjectCreatePage> {
       setState(() {
         _fileName = result.files.single.name;
       });
-      Get.snackbar("성공", "파일이 선택되었습니다: $_fileName");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("파일이 선택되었습니다: $_fileName")),
+      );
     }
   }
 
@@ -174,7 +176,9 @@ class _ProjectCreatePageState extends State<ProjectCreatePage> {
                   );
                   context.push('/project_analysis/$newIndex');
                 } else {
-                  Get.snackbar("알림", "기업명과 직무를 입력해주세요.");
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("기업명과 직무를 입력해주세요.")),
+                  );
                 }
               },
               icon: const Icon(Icons.smart_toy_outlined),

@@ -102,14 +102,7 @@ class HomeController extends GetxController {
     // 나중에 여기에 '프로젝트 생성 페이지'나 '대시보드'로 이동하는 코드를 넣습니다.
     // 예: Get.toNamed('/dashboard');
 
-    Get.snackbar(
-      "환영합니다!",
-      "커리어 여정을 시작하기 위해 워크스페이스를 생성합니다.",
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.black87,
-      colorText: Colors.white,
-      margin: const EdgeInsets.all(20),
-    );
+    debugPrint("환영합니다! 커리어 여정을 시작하기 위해 워크스페이스를 생성합니다.");
   }
 
   // 하단 Step 아이콘 클릭 시
