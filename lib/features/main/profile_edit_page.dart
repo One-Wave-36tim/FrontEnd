@@ -51,7 +51,9 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
         _fileName = result.files.single.name;
         _portfolioUrl = _fileName!; // 시뮬레이션을 위해 파일명을 URL로 저장
       });
-      Get.snackbar("성공", "파일이 선택되었습니다: $_fileName");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("파일이 선택되었습니다: $_fileName")),
+      );
     }
   }
 
@@ -139,7 +141,9 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                       );
                       context.go('/');
                     } else {
-                      Get.snackbar("입력 확인", "이름과 직무는 필수입니다.");
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("이름과 직무는 필수입니다.")),
+                      );
                     }
                   },
                   style: ElevatedButton.styleFrom(
