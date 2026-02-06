@@ -19,7 +19,7 @@ class SignupIdpasswordPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Create Account',
+              '회원가입',
               style: GoogleFonts.outfit(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
@@ -27,13 +27,13 @@ class SignupIdpasswordPage extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Step 1: Set your ID and Password',
+              '아이디와 비밀번호를 설정해 주세요.',
               style: GoogleFonts.outfit(color: Colors.grey),
             ),
             const SizedBox(height: 32),
             TextField(
               decoration: InputDecoration(
-                labelText: 'ID / Username',
+                labelText: '아이디',
                 border:
                     OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
@@ -42,7 +42,7 @@ class SignupIdpasswordPage extends StatelessWidget {
             TextField(
               obscureText: true,
               decoration: InputDecoration(
-                labelText: 'Password',
+                labelText: '비밀번호',
                 border:
                     OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
@@ -51,7 +51,7 @@ class SignupIdpasswordPage extends StatelessWidget {
             TextField(
               obscureText: true,
               decoration: InputDecoration(
-                labelText: 'Confirm Password',
+                labelText: '비밀번호 확인',
                 border:
                     OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
@@ -68,7 +68,7 @@ class SignupIdpasswordPage extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                 ),
-                child: const Text('Sign Up'),
+                child: const Text('회원가입'),
               ),
             ),
           ],
