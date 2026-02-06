@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../controller/home_controller.dart';
+import 'package:intl/intl.dart' as intl;
 
 // --- 1. 자소서 안내 화면 ---
 class ResumeIntroPage extends StatelessWidget {
@@ -1986,21 +1987,918 @@ class InterviewResultPage extends StatelessWidget {
   }
 }
 
-class SimulationPage extends StatelessWidget {
-  const SimulationPage({super.key});
+// --- 7. 직무 시뮬레이션 입문 화면 ---
+class SimulationIntroPage extends StatelessWidget {
+  final int projectIndex;
+  const SimulationIntroPage({super.key, required this.projectIndex});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('직무 시뮬레이션 시작',
-            style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.white,
+        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new,
+              size: 20, color: Colors.black),
           onPressed: () => context.pop(),
         ),
+        title: Text('직무별 시뮬레이션',
+            style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: Colors.black)),
+        centerTitle: true,
+        actions: [
+          IconButton(
+              onPressed: () {},
+              icon: const Icon(Icons.help_outline, color: Colors.grey)),
+        ],
       ),
-      body: const Center(child: Text('직무 시뮬레이션 시작 화면입니다.')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 소개 카드
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8F9FA),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                            color: const Color(0xFFEBF2FF),
+                            borderRadius: BorderRadius.circular(12)),
+                        child: const Icon(Icons.smart_toy_outlined,
+                            color: Color(0xFF1E69FF), size: 24),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text("AI 시뮬레이션 체험",
+                                style: GoogleFonts.outfit(
+                                    fontWeight: FontWeight.bold, fontSize: 16)),
+                            const SizedBox(height: 4),
+                            Text("직무별로 실제 업무 스트레스 상황을 모의로 체험해보세요.",
+                                style: GoogleFonts.outfit(
+                                    color: Colors.grey, fontSize: 13)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  _buildIntroDetail(
+                      Icons.chat_bubble_outline, "챗봇 형태로 대화하며 상황을 해결합니다."),
+                  _buildIntroDetail(
+                      Icons.bar_chart_outlined, "피드백과 점수를 통해 역량을 분석받으세요."),
+                  _buildIntroDetail(
+                      Icons.access_time, "약 10~15분 소요되는 실전형 연습입니다."),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            // 상황 제시
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("상황 제시",
+                    style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.bold, fontSize: 17)),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                      color: const Color(0xFFEBF2FF),
+                      borderRadius: BorderRadius.circular(20)),
+                  child: Text("1/5 단계",
+                      style: GoogleFonts.outfit(
+                          color: const Color(0xFF1E69FF),
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: Colors.grey.shade100),
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.03), blurRadius: 20)
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                            color: const Color(0xFFF1F3F5),
+                            borderRadius: BorderRadius.circular(12)),
+                        child: const Icon(Icons.business_center_outlined,
+                            color: Colors.black54),
+                      ),
+                      const SizedBox(width: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("프로젝트 관리자 역할",
+                              style: GoogleFonts.outfit(
+                                  fontWeight: FontWeight.bold, fontSize: 16)),
+                          Text("IT 프로젝트 · 난이도: 중급",
+                              style: GoogleFonts.outfit(
+                                  color: Colors.grey, fontSize: 12)),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Text("상황 설명",
+                      style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: Colors.grey.shade800)),
+                  const SizedBox(height: 12),
+                  Text(
+                    "주요 고객사와의 중간 보고회가 2시간 앞으로 다가왔습니다. 갑자기 팀원 한 명이 긴급 병가를 내었고, 발표 자료의 핵심 부분이 완성되지 않은 상태입니다. 고객사 담당자는 매우 까다로운 성향으로 알려져 있습니다.",
+                    style: GoogleFonts.outfit(
+                        fontSize: 14, height: 1.6, color: Colors.black87),
+                  ),
+                  const SizedBox(height: 24),
+                  Text("목표",
+                      style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: Colors.grey.shade800)),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      _buildTargetBadge("시간 관리"),
+                      _buildTargetBadge("의사소통"),
+                      _buildTargetBadge("위기 대처"),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                  color: const Color(0xFFEDF2FF),
+                  borderRadius: BorderRadius.circular(16)),
+              child: Row(
+                children: [
+                  const Icon(Icons.lightbulb_outline,
+                      color: Color(0xFF1E69FF), size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("AI 코치 팁",
+                            style: GoogleFonts.outfit(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                                color: const Color(0xFF1E69FF))),
+                        Text(
+                            "실제 업무에서 발생할 수 있는 예상치 못한 상황을 대비하는 연습입니다. 침착하게 우선순위를 판단해보세요.",
+                            style: GoogleFonts.outfit(
+                                fontSize: 12,
+                                color:
+                                    const Color(0xFF1E69FF).withOpacity(0.8))),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 40),
+          ],
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: () =>
+                      context.push('/simulation_session/$projectIndex'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1E69FF),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                    elevation: 0,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.play_arrow_rounded, size: 28),
+                      const SizedBox(width: 8),
+                      Text("시뮬레이션 시작하기",
+                          style: GoogleFonts.outfit(
+                              fontSize: 16, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text("시작하면 약 12분 정도 소요됩니다",
+                  style: GoogleFonts.outfit(color: Colors.grey, fontSize: 12)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIntroDetail(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: const Color(0xFF1E69FF)),
+          const SizedBox(width: 12),
+          Text(text,
+              style: GoogleFonts.outfit(color: Colors.black87, fontSize: 13)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTargetBadge(String label) {
+    return Container(
+      margin: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+          color: const Color(0xFFF1F3F5),
+          borderRadius: BorderRadius.circular(8)),
+      child: Text(label,
+          style: GoogleFonts.outfit(
+              color: Colors.black54,
+              fontSize: 12,
+              fontWeight: FontWeight.w500)),
+    );
+  }
+}
+
+// --- 8. 직무 시뮬레이션 실제 진행 화면 ---
+class SimulationMessage {
+  final String text;
+  final bool isUser;
+  final DateTime time;
+  final String? profileType; // 'boss', 'coworker', etc.
+
+  SimulationMessage(
+      {required this.text,
+      this.isUser = false,
+      required this.time,
+      this.profileType});
+}
+
+class SimulationSessionPage extends StatefulWidget {
+  final int projectIndex;
+  const SimulationSessionPage({super.key, required this.projectIndex});
+
+  @override
+  State<SimulationSessionPage> createState() => _SimulationSessionPageState();
+}
+
+class _SimulationSessionPageState extends State<SimulationSessionPage> {
+  final List<SimulationMessage> _messages = [];
+  final TextEditingController _inputController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  int _interactionCount = 0;
+  bool _isTyping = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _startSimulation();
+  }
+
+  void _startSimulation() {
+    _addBotMessage(
+      "시스템: 프론트엔드 개발자\n\"기획자와 디자인어가 새로운 기능의 우선순위를 두고 논쟁 중입니다. 기획자는 MVP 출시를 위해 기능 A를, 디자이너는 사용자 경험을 위해 기능 B를 우선해야 한다고 주장합니다. 당신은 어떻게 조율하시겠습니까?\"",
+      profileType: 'system',
+    );
+    Future.delayed(const Duration(seconds: 1), () {
+      _addBotMessage(
+        "기획자\n\"기능 A는 비즈니스 가치가 훨씬 높아요. 데이터도 그렇게 말하고 있고, 다음 분기 목표와 직접 연결됩니다. 지금 리소스가 한정된 상황에서 B는 뒤로 미뤄야 해요.\"",
+        profileType: 'boss',
+      );
+    });
+  }
+
+  void _addBotMessage(String text, {String? profileType}) {
+    setState(() {
+      _messages.add(SimulationMessage(
+          text: text,
+          isUser: false,
+          time: DateTime.now(),
+          profileType: profileType));
+    });
+    _scrollToBottom();
+  }
+
+  void _sendMessage() {
+    if (_inputController.text.trim().isEmpty) return;
+    String userText = _inputController.text.trim();
+    _inputController.clear();
+
+    setState(() {
+      _messages.add(SimulationMessage(
+          text: userText, isUser: true, time: DateTime.now()));
+      _interactionCount++;
+      _isTyping = true;
+    });
+    _scrollToBottom();
+
+    // AI Response Simulation
+    Future.delayed(const Duration(seconds: 1), () {
+      if (!mounted) return;
+      setState(() => _isTyping = false);
+      if (_interactionCount == 1) {
+        _addBotMessage(
+            "디자이너\n\"기능 B가 없으면 사용자 이탈률이 30% 이상 올라갈 거예요. 지금 당장의 비즈니스 가치보다 장기적인 사용자 유지가 더 중요하다고 봅니다. A는 다음 업데이트로 넘겨도 돼요.\"",
+            profileType: 'coworker');
+      } else if (_interactionCount < 5) {
+        _addBotMessage(
+            "기획자 (찡그린 표정으로)\n\"사용자 답변을 확인했습니다. 하지만 제 질문의 요지는 리소스가 부족한 상황에서의 '조율'입니다. 단순히 한쪽 편을 드는 것이 아니라, 양측의 타협점을 제시할 수 없나요?\"",
+            profileType: 'boss');
+      } else {
+        _finishSimulation();
+      }
+    });
+  }
+
+  void _finishSimulation() {
+    _addBotMessage(
+        "시스템: 시뮬레이션 종료\n\"수고하셨습니다. 모든 인터랙션이 완료되었습니다. 분석 결과 화면으로 이동합니다.\"",
+        profileType: 'system');
+    Future.delayed(const Duration(seconds: 2), () {
+      if (!mounted) return;
+      final controller = Get.find<HomeController>();
+      controller.completeSimulation(
+          widget.projectIndex, "IT 프로젝트 기획/디자인 조율", 92);
+      context.go('/simulation_result/${widget.projectIndex}');
+    });
+  }
+
+  void _scrollToBottom() {
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new,
+              size: 20, color: Colors.black),
+          onPressed: () => context.pop(),
+        ),
+        title: Text('직무 시뮬레이션',
+            style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: Colors.black)),
+        centerTitle: true,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: CircleAvatar(
+              radius: 16,
+              backgroundImage: const AssetImage('assets/images/stern_boss.png'),
+            ),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+                color: const Color(0xFFF0F6FF),
+                borderRadius: BorderRadius.circular(12)),
+            child: Row(
+              children: [
+                const Icon(Icons.warning_amber_rounded,
+                    color: Color(0xFF1E69FF), size: 18),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("실전 직무 상황 시뮬레이션",
+                          style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                              color: const Color(0xFF1E69FF))),
+                      Text("AI가 제시하는 상황에 최선의 답변을 선택해보세요. 실제 면접처럼 평가됩니다.",
+                          style: GoogleFonts.outfit(
+                              fontSize: 11,
+                              color: const Color(0xFF1E69FF).withOpacity(0.8))),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              controller: _scrollController,
+              padding: const EdgeInsets.all(16),
+              itemCount: _messages.length,
+              itemBuilder: (context, index) {
+                final msg = _messages[index];
+                return _buildMessageBubble(msg);
+              },
+            ),
+          ),
+          if (_isTyping)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 64, vertical: 8),
+              child: LinearProgressIndicator(
+                  minHeight: 2,
+                  color: Color(0xFF1E69FF),
+                  backgroundColor: Color(0xFFF0F6FF)),
+            ),
+
+          // 하단 텍스트 필드
+          _buildInputArea(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMessageBubble(SimulationMessage msg) {
+    bool isBoss = msg.profileType == 'boss';
+    bool isSystem = msg.profileType == 'system';
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24.0),
+      child: Row(
+        mainAxisAlignment:
+            msg.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (!msg.isUser) ...[
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                  color: Colors.grey.shade100, shape: BoxShape.circle),
+              child: isSystem
+                  ? const Icon(Icons.smart_toy_outlined,
+                      size: 20, color: Colors.grey)
+                  : (isBoss
+                      ? Image.asset('assets/images/stern_boss.png',
+                          width: 24, height: 24)
+                      : const Icon(Icons.palette_outlined,
+                          size: 20, color: Colors.grey)),
+            ),
+            const SizedBox(width: 12),
+          ],
+          Flexible(
+            child: Column(
+              crossAxisAlignment: msg.isUser
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: msg.isUser
+                        ? const Color(0xFFEBF2FF)
+                        : (isSystem ? const Color(0xFFF8F9FA) : Colors.white),
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(2),
+                      topRight: const Radius.circular(20),
+                      bottomLeft: const Radius.circular(20),
+                      bottomRight: const Radius.circular(20),
+                    ),
+                    border: msg.isUser
+                        ? null
+                        : Border.all(color: Colors.grey.shade100),
+                  ),
+                  child: Text(
+                    msg.text,
+                    style: GoogleFonts.outfit(
+                        fontSize: 14, height: 1.5, color: Colors.black87),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  intl.DateFormat('yyyy.MM.dd HH:mm').format(msg.time),
+                  style: GoogleFonts.outfit(fontSize: 10, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+          if (msg.isUser) ...[
+            const SizedBox(width: 12),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                  color: const Color(0xFFEBF2FF), shape: BoxShape.circle),
+              child: const Icon(Icons.person_outline,
+                  size: 20, color: Color(0xFF1E69FF)),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInputArea() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border(top: BorderSide(color: Colors.grey.shade100))),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                  color: const Color(0xFFF1F3F5),
+                  borderRadius: BorderRadius.circular(24)),
+              child: TextField(
+                controller: _inputController,
+                decoration: InputDecoration(
+                    hintText: "답변을 입력하세요...",
+                    hintStyle: GoogleFonts.outfit(fontSize: 14),
+                    border: InputBorder.none),
+                onSubmitted: (_) => _sendMessage(),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          GestureDetector(
+            onTap: _sendMessage,
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(
+                  color: Color(0xFF1E69FF), shape: BoxShape.circle),
+              child:
+                  const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// --- 9. 직무 시뮬레이션 결과 화면 ---
+class SimulationResultPage extends StatelessWidget {
+  final int projectIndex;
+  const SimulationResultPage({super.key, required this.projectIndex});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new,
+              size: 20, color: Colors.black),
+          onPressed: () => context.pop(),
+        ),
+        title: Text('직무 시뮬레이션 결과',
+            style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: Colors.black)),
+        centerTitle: true,
+        actions: [
+          IconButton(
+              onPressed: () {},
+              icon: const Icon(Icons.more_vert, color: Colors.black)),
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            const SizedBox(height: 40),
+            Text("직무 적합도 평가",
+                style: GoogleFonts.outfit(color: Colors.grey, fontSize: 14)),
+            const SizedBox(height: 12),
+            Text("92%",
+                style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 56,
+                    color: const Color(0xFF161B22))),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                  color: const Color(0xFFF1F3F5),
+                  borderRadius: BorderRadius.circular(30)),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.person_pin_outlined,
+                      size: 18, color: Colors.black54),
+                  const SizedBox(width: 8),
+                  Text("프론트엔드 개발자",
+                      style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.bold, fontSize: 14)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 48),
+
+            // 역량 분석
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("역량 분석",
+                      style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text("상위 8%",
+                      style:
+                          GoogleFonts.outfit(color: Colors.grey, fontSize: 12)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: LinearProgressIndicator(
+                    value: 0.92,
+                    minHeight: 12,
+                    backgroundColor: Colors.grey.shade100,
+                    color: const Color(0xFF161B22)),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildStatItem("기술 역량", "9.2", "평균 점수"),
+                _buildStatItem("소프트 스킬", "12", "분석 항목"),
+                _buildStatItem("문제 해결", "48h", "소요 시간"),
+              ],
+            ),
+            const SizedBox(height: 40),
+
+            // Best / Worst 순간
+            _buildMomentItem(
+                true,
+                "Best 순간",
+                "복잡한 버그 해결 과정에서 체계적인 디버깅 접근법을 보여주셨어요. 문제를 작은 단위로 분해하고 로그를 분석한 방식이 인상적이에요.",
+                "2026.02",
+                "+15% 영향력"),
+            _buildMomentItem(
+                false,
+                "Worst 순간",
+                "동시 다발적인 요청이 들어왔을 때 우선순위 설정에 어려움을 겪으셨네요. 중요한 업무와 긴급한 업무를 구분하는 전략이 필요해 보여요.",
+                "2026.02",
+                "개선 필요"),
+
+            // 직무 내구력 지표
+            _buildSectionHeader("직무 내구력 지표"),
+            _buildDurabilityItem("스트레스 내성", 0.8),
+            _buildDurabilityItem("업무 집중력", 0.9),
+            _buildDurabilityItem("피드백 수용", 0.85),
+
+            // 보완점 추천
+            _buildSectionHeader("보완점 추천"),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                  color: const Color(0xFFF8F9FA),
+                  borderRadius: BorderRadius.circular(20)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.chat_bubble_outline, size: 20),
+                      const SizedBox(width: 12),
+                      Text("보완점 추천",
+                          style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.bold, fontSize: 15)),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    "크로스펑셔널 협업 시 명확한 의사소통이 필요해요. 기술적 설명을 비개발자에게 전달할 때 비유와 시각적 자료를 활용하는 연습을 추천합니다.",
+                    style: GoogleFonts.outfit(
+                        fontSize: 13, height: 1.6, color: Colors.black87),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text("커뮤니케이션",
+                          style: GoogleFonts.outfit(
+                              color: Colors.grey, fontSize: 12)),
+                      Text("우선순위 높음",
+                          style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.bold, fontSize: 13)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 100),
+          ],
+        ),
+      ),
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.all(24),
+        child: SafeArea(
+          child: SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: ElevatedButton(
+              onPressed: () => context.go('/project_analysis/$projectIndex'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF161B22),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.lightbulb_outline, size: 20),
+                  const SizedBox(width: 12),
+                  Text("직무 시뮬레이션 완료",
+                      style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.bold, fontSize: 16)),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatItem(String label, String value, String sub) {
+    return Column(
+      children: [
+        Text(label,
+            style: GoogleFonts.outfit(fontSize: 12, color: Colors.grey)),
+        const SizedBox(height: 8),
+        Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+              color: const Color(0xFFF8F9FA),
+              borderRadius: BorderRadius.circular(16)),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(value,
+                  style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold, fontSize: 18)),
+              const SizedBox(height: 4),
+              Text(sub,
+                  style: GoogleFonts.outfit(fontSize: 10, color: Colors.grey)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMomentItem(
+      bool isBest, String title, String desc, String date, String status) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.grey.shade100)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                    color: isBest
+                        ? const Color(0xFFF1F3F5)
+                        : const Color(0xFFFFF5F5),
+                    shape: BoxShape.circle),
+                child: Icon(
+                    isBest ? Icons.emoji_events_outlined : Icons.show_chart,
+                    size: 20,
+                    color: isBest ? Colors.black87 : Colors.red),
+              ),
+              const SizedBox(width: 12),
+              Text(title,
+                  style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold, fontSize: 15)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(desc,
+              style: GoogleFonts.outfit(
+                  fontSize: 13, height: 1.6, color: Colors.black87)),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(date,
+                  style: GoogleFonts.outfit(color: Colors.grey, fontSize: 12)),
+              Text(status,
+                  style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      color: isBest ? Colors.black87 : Colors.grey)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(title,
+            style:
+                GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
+      ),
+    );
+  }
+
+  Widget _buildDurabilityItem(String label, double value) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+      child: Row(
+        children: [
+          SizedBox(
+              width: 100,
+              child: Text(label,
+                  style:
+                      GoogleFonts.outfit(fontSize: 14, color: Colors.black87))),
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: LinearProgressIndicator(
+                  value: value,
+                  minHeight: 10,
+                  backgroundColor: Colors.grey.shade100,
+                  color: const Color(0xFF161B22)),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
