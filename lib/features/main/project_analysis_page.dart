@@ -194,13 +194,13 @@ class ProjectAnalysisPage extends StatelessWidget {
 
               const SizedBox(height: 24),
 
-              // 2. 내가 한 프로젝트
+              // 2. 포트폴리오
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text("내가 한 프로젝트",
+                    Text("포트폴리오",
                         style: GoogleFonts.outfit(
                             fontWeight: FontWeight.bold, fontSize: 18)),
                     TextButton(
@@ -212,7 +212,9 @@ class ProjectAnalysisPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              _buildMyProjectsGrid(project['myProjects'] ?? []),
+              _buildMyProjectsGrid(
+                project['myProjects'] ?? project['portfolios'] ?? [],
+              ),
 
               const SizedBox(height: 32),
 

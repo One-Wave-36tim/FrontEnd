@@ -25,6 +25,7 @@ class _ProjectCreatePageState extends State<ProjectCreatePage> {
   final _githubController = TextEditingController();
 
   bool _isDeveloperMode = false;
+  bool _isSubmitting = false;
   String? _fileName;
 
   @override
@@ -44,6 +45,10 @@ class _ProjectCreatePageState extends State<ProjectCreatePage> {
       type: FileType.custom,
       allowedExtensions: ['pdf'],
     );
+
+    if (!mounted) {
+      return;
+    }
 
     if (result != null) {
       setState(() {
@@ -139,7 +144,7 @@ class _ProjectCreatePageState extends State<ProjectCreatePage> {
                                 _isDeveloperMode = val;
                               });
                             },
-                            activeColor: const Color(0xFF1E69FF),
+                            activeTrackColor: const Color(0xFF1E69FF),
                           ),
                         ],
                       ),
@@ -165,26 +170,66 @@ class _ProjectCreatePageState extends State<ProjectCreatePage> {
             width: double.infinity,
             height: 56,
             child: ElevatedButton.icon(
-              onPressed: () {
-                if (_companyController.text.isNotEmpty &&
-                    _jobController.text.isNotEmpty) {
-                  final newIndex = controller.createProject(
-                    _companyController.text,
-                    _jobController.text,
-                    "2025.02", // 현재 날짜 (시뮬레이션)
-                    10, // 초기 진행률
-                  );
-                  context.push('/project_analysis/$newIndex');
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("기업명과 직무를 입력해주세요.")),
-                  );
-                }
-              },
+              onPressed: _isSubmitting
+                  ? null
+                  : () async {
+                      if (_companyController.text.isEmpty ||
+                          _jobController.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("기업명과 직무를 입력해주세요.")),
+                        );
+                        return;
+                      }
+
+                      setState(() {
+                        _isSubmitting = true;
+                      });
+
+                      final newIndex = await controller.createProjectRemote(
+                        companyName: _companyController.text.trim(),
+                        roleTitle: _jobController.text.trim(),
+                        jobPostingUrl: _linkController.text.trim(),
+                        notionUrl: _notionController.text.trim(),
+                        blogUrl: _blogController.text.trim(),
+                        representativeDescription:
+                            _descriptionController.text.trim(),
+                        developerMode: _isDeveloperMode,
+                        githubRepoUrl: _githubController.text.trim(),
+                      );
+
+                      if (!context.mounted) {
+                        return;
+                      }
+
+                      setState(() {
+                        _isSubmitting = false;
+                      });
+
+                      if (newIndex == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content:
+                                Text("프로젝트 생성에 실패했습니다. 로그인/서버 상태를 확인해 주세요."),
+                          ),
+                        );
+                        return;
+                      }
+
+                      context.push('/project_analysis/$newIndex');
+                    },
               icon: const Icon(Icons.smart_toy_outlined),
-              label: Text("AI 분석 시작",
-                  style: GoogleFonts.outfit(
-                      fontSize: 16, fontWeight: FontWeight.bold)),
+              label: _isSubmitting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text("AI 분석 시작",
+                      style: GoogleFonts.outfit(
+                          fontSize: 16, fontWeight: FontWeight.bold)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF1E69FF),
                 foregroundColor: Colors.white,

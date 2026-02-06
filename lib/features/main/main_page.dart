@@ -254,13 +254,18 @@ class MainPage extends StatelessWidget {
       children: controller.projects
           .asMap()
           .entries
-          .map((entry) => _buildProjectCard(context, entry.key, entry.value))
+          .map((entry) =>
+              _buildProjectCard(context, controller, entry.key, entry.value))
           .toList(),
     );
   }
 
-  Widget _buildProjectCard(
-      BuildContext context, int index, Map<String, dynamic> project) {
+  Widget _buildProjectCard(BuildContext context, HomeController controller,
+      int index, Map<String, dynamic> project) {
+    final dDayLabel = project['dDayLabel']?.toString() ?? 'D-14';
+    final lastActivityLabel =
+        project['lastActivityLabel']?.toString() ?? '활동 정보 없음';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
@@ -335,13 +340,13 @@ class MainPage extends StatelessWidget {
             children: [
               Icon(Icons.calendar_today, size: 14, color: Colors.grey.shade400),
               const SizedBox(width: 8),
-              Text('D-14',
+              Text(dDayLabel,
                   style: GoogleFonts.outfit(
                       fontSize: 13, color: Colors.grey.shade600)),
               const SizedBox(width: 16),
               Icon(Icons.access_time, size: 14, color: Colors.grey.shade400),
               const SizedBox(width: 8),
-              Text('최근 활동: 2시간 전',
+              Text('최근 활동: $lastActivityLabel',
                   style: GoogleFonts.outfit(
                       fontSize: 13, color: Colors.grey.shade600)),
             ],
@@ -351,7 +356,11 @@ class MainPage extends StatelessWidget {
             width: double.infinity,
             height: 48,
             child: OutlinedButton.icon(
-              onPressed: () {
+              onPressed: () async {
+                await controller.loadProjectDashboardByIndex(index);
+                if (!context.mounted) {
+                  return;
+                }
                 context.push('/project_analysis/$index');
               },
               icon: const Icon(Icons.psychology_outlined, size: 20),
