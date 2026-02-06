@@ -116,6 +116,27 @@ final GoRouter _router = GoRouter(
         return InterviewResultPage(projectIndex: index);
       },
     ),
+    GoRoute(
+      path: '/simulation/:index',
+      builder: (context, state) {
+        final index = int.parse(state.pathParameters['index']!);
+        return SimulationIntroPage(projectIndex: index);
+      },
+    ),
+    GoRoute(
+      path: '/simulation_session/:index',
+      builder: (context, state) {
+        final index = int.parse(state.pathParameters['index']!);
+        return SimulationSessionPage(projectIndex: index);
+      },
+    ),
+    GoRoute(
+      path: '/simulation_result/:index',
+      builder: (context, state) {
+        final index = int.parse(state.pathParameters['index']!);
+        return SimulationResultPage(projectIndex: index);
+      },
+    ),
   ],
 );
 
